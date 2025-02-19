@@ -1,0 +1,147 @@
+go mod init 项目名  初始化项目
+go mod tidy  下载丢失的包
+go run main.go
+
+defer+recover解决协程中出现的Panic
+defer func(){
+    //捕获抛出的Panic，并且继续执行报错之外的语句
+    if err:=recover();err!=nil{
+        fmt.Println("发生了错误",err)
+    }
+}
+
+令牌技术：支持PC端、移动端；解决集群环境下的认证问题；减轻服务器端存储压力。缺点：需要自己实现
+全称:JSON Web Token (https://iwt.io/
+定义了一种简洁的、自包含的格式，用于在通信双方以json数据格式安全的传输信息。由于数字签名的存在，这些信息是可靠的。
+你改是随便改的，因为负载的信息不是加密而是64位编码，但你改了以后的数字签名也要改，这样就跟原来的数字签名不一样了，人家就知道你改过了
+他只是解析了前面两个部分的数据，而你在服务器需要检验是第三个部分的数据，因为只有第三个部分是加密的，而且携带了前两个部分的内容
+JWT:验证签名：HMACSHA256(
+      base64UrlEncode(header) + "." +
+      base64UrlEncode(payload),
+    your-256-bit-secret)
+JWT校验时使用的签名秘钥，必须和生成]WT令牌时使用的秘钥是配套的,如果JWT令牌解析校验时报错，则说明JWT令牌被篡改或失效了，令牌非法
+
+
+//将结构体转为json编码
+jsonData, _ := json.Marshal(&input)
+s := string(jsonData)
+fmt.Println(s)
+//将json编码转换为结构体
+json.Unmarshal([]byte(s), &input)
+//从 HTTP 请求的 JSON 数据中解析并绑定到结构体 input 的方法
+ctx.ShouldBindJSON(&input)
+//把get传来的数据绑定到结构体上
+err := c.ShouldBind(&a)
+
+结构体定义时：
+binding:"required" 是用于验证字段的标签。
+binding:"omitempty"：字段可选，但如果提供了数据会验证类型正确性。
+binding:"min=1,max=10"：设置字符串或数字的最小和最大值。
+binding:"email"：验证字段是否为合法的电子邮件格式。
+它通常与 Gin 框架的 ShouldBindJSON 或 ShouldBind 方法一起使用，用于验证来自请求的数据。
+
+用表单来传输username、password注册账户等需要在声明结构体时加上form:"username"标签来确保表单字段与结构体字段绑定
+默认情况下，Go 的工作目录是你执行程序时的目录
+
+中间件是为了过滤路由而发明的一种机制,也就是http请求来到时先经过中间件,再到具体的处理函数。
+在中间件中使用协程  主程序会等待协程执行完成，不需要sync
+gin.HandlerFunc其实返回的是一个以c *gin.Context为参数的函数
+c.Abort()//提前结束请求处理，不处理后边的中间件任务了
+Set用于存储此上下文专用的新键值对c.Set("username", username) 后续可用Get来获取值，可以在跨中间件取值
+ctx.Next()的作用调用下一个中间件或处理器 调用该请求的剩余中间件处理程序后再处理该中间件的后续程序
+
+参数路由：在路径中带有参数的路由/articles/:id  	uid := context.Param("uid") 获取路径中的参数
+静态路由：完整的路由/articles
+
+
+错误判断
+//未找到记录 404
+if errors.Is(err, gorm.ErrRecordNotFound) {
+	c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	return
+} else {
+	//服务端出现了问题  500
+	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	return
+}
+
+
+Redis
+持久化
+定义:持久化是指将数据写入持久存储(durable storage),如固态硬盘(SSD)。
+Redis提供了一系列选项。
+.RDB(Redis Database):RDB持久化通过在指定的时间间隔内创建数据集的快照来保存数据。
+2.AOF(Append Only File): AOF持久化记录服务器接收到的每一个写操作，并将这些操作追加到日志文件中。 appendonly yes
+3.无持久化:完全禁用 Redis 的持久化机制,这意味着Redis只会在内存中存储数据。
+4.AOF + RDB组合:可以在同一个实例中同时后用 RDB和 AOF持久化。
+SET,INCR,DECR,GET命今
+SET命今用于设置给定key的值。
+INCR将 key中储存的数字值增一。
+若key不存在,那么key的值会先被初始化为0,然后再执行操作。(0 ->1)
+DECR则将key中储存的数字减一。
+GET命今用于获取指定key 的值。
+
+Redis案例,缓存实战-
+为何要有缓存技术?
+    减轻数据库访问压力,加快请求响应速度。
+    缓存读取速度比从数据库中读取快得多。亦可大幅减少数据库查询的次数,提高应用程序的响应速度。
+1.缓存未命中:
+如果 Redis 中没有找到对应的缓存(缓存未命中),代码会从数据库中获取文章数据。
+获取到数据后,代码将数据序列化为JSON,并将其存储在 Redis缓存中,同时设置一个过期时间。
+最后,返回数据库中的数据给客户端。
+2.缓存命中:
+如果缓存命中(Redis 中找到了对应的缓存数据),代码值接从缓存中获取数据。然后,将缓存中的数据反序列化为文章列表,返回给客户端。
+
+若在缓存有效期内,用户又新增了一些文章,此时用户通过缓存得到文章,将看不到变化。
+解决方法案例:常见的缓存失效策略
+1.设置过期时间(我们已经做过了)2.主动更新缓存
+如:当新增文章时,除了更新数据库，还要同步更新或删除缓存中的对应数据。这样,下一次读取时，缓存中的数据就是最新的。
+或者新增文章时，不直接更新缓存,而是删除缓存中的旧数据。
+下次读取时，由于缓存没有命中,从数据库中读取最新数据并重新写入缓存。Redis DEL命合:用于删除已存在的键。
+
+CORS的概念:
+CORS,全称为"跨域(跨源)资源共享"(Cross-Origin Resource Sharing)是一种机制,
+使用额外的HTTP头来告诉浏览器允许一个网页从另一个域(不同于该网页所在的域)请求资源。
+这样可以在服务器和客户端之间进行安全的跨域通信。
+跨域请求
+    指从一个域向另一个域发起的HTTP 请求。
+    如从前端应用向不同的后端API服务器请求数据,但是同源策略默认会阻止这些请求。所以需要CORS 机制来显式允许跨域访问。
+浏览器默认允许同源请求,但是默认会阻止这些跨域请求,除非服务器明确允许。
+
+
+
+GRPC-GOZERO:
+func RegisterHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+	//解析请求的参数
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req types.RegisterRequest
+		if err := httpx.Parse(r, &req); err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+			return
+		}
+
+		//将配置信息传入，并且返回一个对象
+		l := logic.NewRegisterLogic(r.Context(), svcCtx)
+		//将请求参数放到对象的方法中得到响应结果
+		resp, err := l.Register(&req)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			httpx.OkJsonCtx(r.Context(), w, resp)
+		}
+	}
+}
+
+生成api：goctl api go --dir=./ --api applet.api
+生成proto：goctl rpc protoc ./user.proto --go_out=. --go-grpc_out=. --zrpc_out=./
+
+进入redis：docker exec -it 33e5a0338b26 redis-cli   获取所有key：keys *
+
+golang中   BeforeUpdate 钩子函数 仅在 Save 或 Update 方法中生效，而不适用于 Updates
+    var num *int=&p  &获取地址  *num根据地址取值  指针就是地址
+goctl model mysql datasource -url="root:123456@tcp(192.168.195.5:3306)/share-file" -table="file" -dir ./internal/model -c
+
+query：是查询参数,需要指明参数名称 如/id=2
+param：是路由参数，不需要指明参数名称 如/2
+
+gorm:当使用First、Last、Take等方法未找到记录时，GORM会返回ErrRecordNotFound  避免可以使用Find
