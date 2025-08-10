@@ -2,11 +2,12 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"log"
+
+	"github.com/spf13/viper"
 )
 
-const configFile = "D:\\code\\golang\\project\\hmshop\\config\\application-dev.yaml"
+const configFile = "config/application-dev.yaml"
 
 func InitConfig() *Config {
 	viper.SetConfigName("application-dev")
