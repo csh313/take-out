@@ -1,0 +1,17 @@
+{
+	"name": "Go",
+  	"dockerComposeFile": "docker-compose.dev.yml",
+  	"service": "takeout",
+  	"workspaceFolder": "/app",
+	"customizations": {
+    	"vscode": {
+    	  "extensions": [
+    	    "eamodio.gitlens",
+    	    "golang.Go",
+    	    "ms-azuretools.vscode-docker",
+    	    "golang.go"
+    	  ]
+    	}
+  	},
+	"remoteUser": "root"
+}
