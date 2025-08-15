@@ -1,9 +1,10 @@
 package initialize
 
 import (
-	"github.com/IBM/sarama"
 	"hmshop/config"
 	"hmshop/global"
+
+	"github.com/IBM/sarama"
 )
 
 func InitKafkaConfig() config.Kafka {
@@ -24,7 +25,6 @@ func InitProducer() sarama.SyncProducer {
 	if err != nil {
 		global.Log.Error("创建生产者失败")
 		panic(err)
-		return nil
 	}
 
 	return producer
@@ -43,7 +43,6 @@ func InitConsumer() sarama.ConsumerGroup {
 	if err != nil {
 		global.Log.Error("创建消费者失败。。。")
 		panic(err)
-		return nil
 	}
 
 	return consumerGroup

@@ -1,12 +1,14 @@
 package initialize
 
 import (
+	"hmshop/config"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"time"
 )
 
 func InitGorm(dsn string) *gorm.DB {
@@ -42,4 +44,8 @@ func InitGorm(dsn string) *gorm.DB {
 	//SlowQueryLog(db)
 	//GormRateLimiter(db,rate.NewLimiter(500,1000))
 	return db
+}
+
+func InitMysqlCluster(sql config.MysqlConf) (*gorm.DB, *gorm.DB) {
+	return nil, nil
 }

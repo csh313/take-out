@@ -2,8 +2,6 @@ package adminService
 
 import (
 	"errors"
-	"github.com/fatih/structs"
-	"github.com/gin-gonic/gin"
 	"hmshop/common/code"
 	"hmshop/common/enum"
 	"hmshop/common/res"
@@ -12,6 +10,9 @@ import (
 	"hmshop/internal/model"
 	pwd "hmshop/utils"
 	"time"
+
+	"github.com/fatih/structs"
+	"github.com/gin-gonic/gin"
 )
 
 type EmployeeService struct {
