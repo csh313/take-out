@@ -17,7 +17,7 @@ func GlobalInit() *gin.Engine {
 	global.AppConfig = config.InitConfig()
 	global.Log = logger.NewLogger(global.AppConfig.Log.Level, global.AppConfig.Log.FilePath)
 	global.DB = InitGorm(global.AppConfig.Datasource.Dsn())
-	// global.DBs = InitMysqlCluster(global.AppConfig.MysqlConf)
+	global.DBs = InitMysqlCluster(global.AppConfig.MysqlConf)
 	global.Redis = InitRedis()
 	global.KafkaConfig = InitKafkaConfig()
 	util.InitAliOss()

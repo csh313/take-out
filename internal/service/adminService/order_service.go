@@ -2,7 +2,6 @@ package adminService
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"hmshop/common/code"
 	"hmshop/common/res"
 	"hmshop/global"
@@ -11,6 +10,8 @@ import (
 	"hmshop/internal/model"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type OrderService struct {
@@ -27,7 +28,7 @@ func (s OrderService) Confirm(id int, c *gin.Context) error {
 }
 
 func (s OrderService) UpdateOrder(order model.Order) error {
-	if err := global.DB.Model(&order).Updates(order).Error; err != nil {
+	if err := global.DBs.Model(&order).Updates(order).Error; err != nil {
 		global.Log.Error(err.Error())
 		return errors.New(code.EditError)
 	}
@@ -36,7 +37,7 @@ func (s OrderService) UpdateOrder(order model.Order) error {
 }
 
 func (s OrderService) Details(id int) (*resp.OrderVO, error) {
-	tx := global.DB.Begin()
+	tx := global.DBs.Begin()
 
 	//抛出异常
 	defer func() {
@@ -176,7 +177,6 @@ func (s OrderService) Search(condition req.OrderPageQueryDTO) (*res.PageResult, 
 		return nil, err
 	}
 	if orders != nil && len(orders) > 0 {
-
 		for _, order := range orders {
 			details, err := s.Details(order.Id)
 			if err != nil {
@@ -191,7 +191,7 @@ func (s OrderService) Search(condition req.OrderPageQueryDTO) (*res.PageResult, 
 
 func (s OrderService) GetById(orderId int) (*model.Order, error) {
 	var orderModel = model.Order{}
-	if err := global.DB.Where("id = ?", orderId).Find(&orderModel).Error; err != nil {
+	if err := global.DBs.Where("id = ?", orderId).Find(&orderModel).Error; err != nil {
 		global.Log.Error(err.Error())
 		return nil, errors.New(code.QueryError)
 	}
@@ -200,7 +200,7 @@ func (s OrderService) GetById(orderId int) (*model.Order, error) {
 
 func (s OrderService) Statistics() (*resp.OrderStatisticsVO, error) {
 	var orderStatistics = resp.OrderStatisticsVO{}
-	tx := global.DB.Model(&model.Order{})
+	tx := global.DBs.Model(&model.Order{})
 	if err := tx.Where("status=?", code.ToBeConfirmed).
 		Count(&orderStatistics.ToBeConfirmed).Error; err != nil {
 		global.Log.Error(err.Error())

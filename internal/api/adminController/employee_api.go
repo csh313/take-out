@@ -1,7 +1,6 @@
 package adminController
 
 import (
-	"github.com/gin-gonic/gin"
 	"hmshop/common/code"
 	"hmshop/common/res"
 	"hmshop/global"
@@ -10,6 +9,8 @@ import (
 	"hmshop/internal/service/adminService"
 	pwd "hmshop/utils"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type EmployeeApi struct {
@@ -58,7 +59,7 @@ func (em EmployeeApi) GetEmployee(c *gin.Context) {
 		return
 	}
 	var employeeModel model.Employee
-	if err := global.DB.Where("id", id).First(&employeeModel).Error; err != nil {
+	if err := global.DBs.Where("id", id).First(&employeeModel).Error; err != nil {
 		res.FailWithMessage(err.Error(), c)
 		return
 	}

@@ -2,12 +2,13 @@ package userService
 
 import (
 	"errors"
-	"gorm.io/gorm"
 	"hmshop/global"
 	"hmshop/internal/api/req"
 	"hmshop/internal/model"
 	util "hmshop/utils"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type UserService struct{}
@@ -22,11 +23,11 @@ func (s UserService) Login(code req.UserLoginDTO) (*model.User, error) {
 		return nil, errors.New("openid is null")
 	}
 	var user model.User
-	if err = global.DB.Where("openid = ?", openid).First(&user).Error; err != nil {
+	if err = global.DBs.Where("openid = ?", openid).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			user.OpenID = openid
 			user.CreateTime = time.Now()
-			if err := global.DB.Create(&user).Error; err != nil {
+			if err := global.DBs.Create(&user).Error; err != nil {
 				return nil, err
 			} else {
 

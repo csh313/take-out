@@ -1,4 +1,7 @@
 version: '3.8'
+networks:
+  takeout:
+    driver: bridge # 桥接网络，除开发容器外，所有容器都在这个网络里
 services:
   takeout:
     build:
@@ -28,6 +31,8 @@ services:
       - "80:80"
       - "1234:1234"
     command: sleep infinity
+    networks:
+      - takeout
 
   mysql:
     image: mysql:8.0
@@ -44,6 +49,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - takeout
 
   redis:
     image: redis:alpine
@@ -57,6 +64,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - takeout
 
   kafka:
     image: bitnami/kafka:3.6
@@ -78,6 +87,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - takeout
   mysql-master:
     image: mysql:8.0
     environment:
@@ -88,7 +99,9 @@ services:
       - "3307:3306"
     volumes:
       - mysql-master-data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password --server-id=1 --log-bin=mysql-bin --binlog-do-db=hmshop
+    command: --default-authentication-plugin=mysql_native_password --server-id=1 --log-bin=mysql-bin --binlog-do-db=sky_take_out
+    networks:
+      - takeout
   mysql-slave:
     image: mysql:8.0
     environment:
@@ -102,6 +115,8 @@ services:
     command: --default-authentication-plugin=mysql_native_password --server-id=2 --relay-log=mysql-relay-bin --read-only=1
     depends_on:
       - mysql-master
+    networks:
+      - takeout
 volumes:
   redis_data:
   mysql_data:

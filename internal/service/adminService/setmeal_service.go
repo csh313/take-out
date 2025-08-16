@@ -3,9 +3,6 @@ package adminService
 import (
 	"errors"
 	"fmt"
-	"github.com/fatih/structs"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"hmshop/common/code"
 	"hmshop/common/enum"
 	"hmshop/common/res"
@@ -14,14 +11,18 @@ import (
 	"hmshop/internal/api/resp"
 	"hmshop/internal/model"
 	"time"
+
+	"github.com/fatih/structs"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type SetmealService struct {
 }
 
 func (s SetmealService) AddSetmeal(req req.SetMealDTO, c *gin.Context) error {
-	//tx := global.DB.WithContext(c).Begin()
-	tx := global.DB.WithContext(c)
+	//tx := global.DBs.WithContext(c).Begin()
+	tx := global.DBs.WithContext(c)
 
 	//查找是否已包含该套餐
 	if err := tx.Take(&model.SetMeal{}, "name", req.Name).RowsAffected; err != 0 {
@@ -67,7 +68,7 @@ func (s SetmealService) AddSetmeal(req req.SetMealDTO, c *gin.Context) error {
 
 func (s SetmealService) GetById(id int, c *gin.Context) (*resp.SetMealWithDishByIdVo, error) {
 	var setmealModel = model.SetMeal{}
-	if err := global.DB.Preload("SetMealDishes").Take(&setmealModel, "id=?", id).Error; err != nil {
+	if err := global.DBs.Preload("SetMealDishes").Take(&setmealModel, "id=?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			res.FailWithMessage(code.DataNotFound, c)
 			return nil, err
@@ -77,7 +78,7 @@ func (s SetmealService) GetById(id int, c *gin.Context) (*resp.SetMealWithDishBy
 	}
 	// 查询 CategoryName（根据 CategoryId 获取分类名称）
 	var categoryName string
-	if err := global.DB.Model(&model.Category{}).Where("id=?", setmealModel.CategoryId).
+	if err := global.DBs.Model(&model.Category{}).Where("id=?", setmealModel.CategoryId).
 		Select("name").Take(&categoryName).Error; err != nil {
 		global.Log.Error(err.Error())
 		return nil, errors.New(code.QueryError)
@@ -103,7 +104,7 @@ func (s SetmealService) PageQuery(page req.PageInfo, c *gin.Context) (res.PageRe
 }
 
 func (s SetmealService) DeleteByIds(list []string, c *gin.Context) error {
-	tx := global.DB.WithContext(c).Begin()
+	tx := global.DBs.WithContext(c).Begin()
 	tx.Begin()
 	if err := tx.Where("setmeal_id in (?)", list).Delete(&model.SetMealDish{}).Error; err != nil {
 		global.Log.Error(err.Error())
@@ -133,7 +134,7 @@ func (s SetmealService) UpdateMeal(mealReq req.SetMealDTO, c *gin.Context) error
 	var setmealModel = model.SetMeal{}
 	uId, _ := c.Get(enum.CurrentId)
 	//开启事务
-	tx := global.DB.Begin()
+	tx := global.DBs.Begin()
 	//抛出异常
 	defer func() {
 		if r := recover(); r != nil {
@@ -214,12 +215,12 @@ func (s SetmealService) UpdateMeal(mealReq req.SetMealDTO, c *gin.Context) error
 func (s SetmealService) SetStatus(id uint64, status int, c *gin.Context) error {
 
 	var model model.SetMeal
-	Rows := global.DB.Preload("SetMealDishes").Take(&model, id).RowsAffected
+	Rows := global.DBs.Preload("SetMealDishes").Take(&model, id).RowsAffected
 	if Rows <= 0 {
 		global.Log.Error("该套餐不存在")
 		return errors.New(code.DataNotFound)
 	}
-	if err := global.DB.WithContext(c).Model(&model).Update("status", status).Error; err != nil {
+	if err := global.DBs.WithContext(c).Model(&model).Update("status", status).Error; err != nil {
 		global.Log.Error(err.Error())
 		return errors.New(code.EditError)
 	}

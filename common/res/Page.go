@@ -1,9 +1,10 @@
 package res
 
 import (
-	"gorm.io/gorm"
 	"hmshop/global"
 	"hmshop/internal/api/req"
+
+	"gorm.io/gorm"
 )
 
 func PageList[T any](page req.PageInfo, model T) (list PageResult, err error) {
@@ -17,7 +18,7 @@ func PageList[T any](page req.PageInfo, model T) (list PageResult, err error) {
 	if page.PageSize <= 0 {
 		page.PageSize = -1
 	}
-	query := global.DB.Model(&model)
+	query := global.DBs.Model(&model)
 	if page.Name != "" {
 		query = query.Where("name LIKE ?", "%"+page.Name+"%")
 	}
@@ -31,7 +32,7 @@ func PageList[T any](page req.PageInfo, model T) (list PageResult, err error) {
 		query = query.Where("category_id = ?", page.CategoryId)
 	}
 
-	//global.DB.Where(&model).Find(&(list.Rows))
+	//global.DBs.Where(&model).Find(&(list.Rows))
 	query.Count(&(list.Total))
 
 	err = query.Limit(page.PageSize).Offset(offset).Preload("SetMealDishes").Find(&list.Rows).Error
@@ -49,7 +50,7 @@ func PageListRow[T any](page req.PageInfo, model T) (*gorm.DB, int, int) {
 	if page.PageSize <= 0 {
 		page.PageSize = -1
 	}
-	query := global.DB.Model(&model)
+	query := global.DBs.Model(&model)
 	if page.Name != "" {
 		query = query.Where("name LIKE ?", "%"+page.Name+"%")
 	}
@@ -63,7 +64,7 @@ func PageListRow[T any](page req.PageInfo, model T) (*gorm.DB, int, int) {
 		query = query.Where("category_id = ?", page.CategoryId)
 	}
 
-	//global.DB.Where(&model).Find(&(list.Rows))
+	//global.DBs.Where(&model).Find(&(list.Rows))
 	//query.Count(&(list.Total))
 
 	//query = query.Limit(page.PageSize).Offset(offset)

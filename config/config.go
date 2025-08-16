@@ -114,6 +114,6 @@ type MysqlConf struct {
 	Strategy Strategy
 }
 
-func (d *SqlConfig) Dsn() string {
-	return d.Username + ":" + d.Password + "@tcp(" + d.Host + ":" + d.Port + ")/" + d.DBName + "?" + d.Config
+func (s *SqlConfig) Dsn() string {
+	return s.Username + ":" + s.Password + "@tcp(" + s.Host + ":" + s.Port + ")/" + s.DBName + "?" + s.Config
 }
