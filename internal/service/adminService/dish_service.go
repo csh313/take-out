@@ -1,8 +1,6 @@
 package adminService
 
 import (
-	"github.com/fatih/structs"
-	"github.com/gin-gonic/gin"
 	"hmshop/common/code"
 	"hmshop/common/enum"
 	"hmshop/common/res"
@@ -11,6 +9,9 @@ import (
 	"hmshop/internal/api/resp"
 	"hmshop/internal/model"
 	"time"
+
+	"github.com/fatih/structs"
+	"github.com/gin-gonic/gin"
 )
 
 type DishService struct {
@@ -19,7 +20,7 @@ type DishService struct {
 func (DishService) AddDish(c *gin.Context, dishReq req.DishDTO) error {
 
 	//开启事务
-	tx := global.DB.Begin()
+	tx := global.DBs.Begin()
 	//抛出异常
 	defer func() {
 		if r := recover(); r != nil {
@@ -67,7 +68,7 @@ func (s DishService) DishPage(c *gin.Context, dishReq req.PageInfo) (res.PageRes
 
 func (s DishService) GetById(c *gin.Context, id int) (model.Dish, error) {
 	var dishModel = model.Dish{}
-	err := global.DB.Preload("Flavors").Where("id = ?", id).First(&dishModel).Error
+	err := global.DBs.Preload("Flavors").Where("id = ?", id).First(&dishModel).Error
 	if err != nil {
 		global.Log.Error(err.Error())
 	}
@@ -76,20 +77,20 @@ func (s DishService) GetById(c *gin.Context, id int) (model.Dish, error) {
 
 func (s DishService) List(categoryId uint64, c *gin.Context) ([]model.Dish, error) {
 	var list []model.Dish
-	err := global.DB.Preload("Flavors").Where("category_id =?", categoryId).Find(&list).Error
+	err := global.DBs.Preload("Flavors").Where("category_id =?", categoryId).Find(&list).Error
 	return list, err
 
 }
 
 func (s DishService) DeleteDish(list []string, c *gin.Context) error {
-	err := global.DB.Where("id in (?)", list).Delete(&model.Dish{}).Error
+	err := global.DBs.Where("id in (?)", list).Delete(&model.Dish{}).Error
 	return err
 }
 func (s DishService) UpdateDish(c *gin.Context, dishReq req.DishUpdateDTO) error {
 	var dishModel = model.Dish{}
 	uId, _ := c.Get(enum.CurrentId)
 	//开启事务
-	tx := global.DB.Begin()
+	tx := global.DBs.Begin()
 	//抛出异常
 	defer func() {
 		if r := recover(); r != nil {

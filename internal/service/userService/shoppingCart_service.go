@@ -2,8 +2,6 @@ package userService
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/copier"
 	"hmshop/common/code"
 	"hmshop/common/enum"
 	"hmshop/common/res"
@@ -11,6 +9,9 @@ import (
 	"hmshop/internal/api/req"
 	"hmshop/internal/model"
 	"hmshop/internal/service/adminService"
+
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 )
 
 type ShoppingCartService struct {
@@ -18,7 +19,7 @@ type ShoppingCartService struct {
 
 func (sc ShoppingCartService) List(value any, c *gin.Context) []model.ShoppingCart {
 	var shoppingCart []model.ShoppingCart
-	if err := global.DB.Find(&shoppingCart).Where("user_id=?", value).Error; err != nil {
+	if err := global.DBs.Find(&shoppingCart).Where("user_id=?", value).Error; err != nil {
 		global.Log.Error(err)
 		res.FailWithMessage(code.SqlError, c)
 	}
@@ -52,7 +53,7 @@ func (sc ShoppingCartService) AddCart(cartReq req.ShoppingCartDTO, c *gin.Contex
 		//购物车中存在该商品
 		shoppingCart = shoppingCartList[0]
 		shoppingCart.Number++
-		if err := global.DB.Updates(&shoppingCart).Error; err != nil {
+		if err := global.DBs.Updates(&shoppingCart).Error; err != nil {
 			global.Log.Error(err)
 			res.FailWithMessage(code.SqlError, c)
 			return err
@@ -80,7 +81,7 @@ func (sc ShoppingCartService) AddCart(cartReq req.ShoppingCartDTO, c *gin.Contex
 		}
 		shoppingCart.Number = 1
 
-		if err := global.DB.Create(&shoppingCart).Error; err != nil {
+		if err := global.DBs.Create(&shoppingCart).Error; err != nil {
 			global.Log.Error(err)
 			res.FailWithMessage(code.SqlError, c)
 			return err
@@ -114,14 +115,14 @@ func (sc ShoppingCartService) Delete(cartReq req.ShoppingCartDTO, c *gin.Context
 		shoppingCart = shoppingCartList[0]
 		if shoppingCart.Number == 1 {
 			//只有一份就直接删除
-			if err := global.DB.Delete(&shoppingCart).Error; err != nil {
+			if err := global.DBs.Delete(&shoppingCart).Error; err != nil {
 				global.Log.Error(err)
 				res.FailWithMessage(code.SqlError, c)
 				return err
 			}
 		} else {
 			shoppingCart.Number--
-			if err := global.DB.Updates(&shoppingCart).Error; err != nil {
+			if err := global.DBs.Updates(&shoppingCart).Error; err != nil {
 				global.Log.Error(err)
 				res.FailWithMessage(code.SqlError, c)
 				return err
@@ -134,7 +135,7 @@ func (sc ShoppingCartService) Delete(cartReq req.ShoppingCartDTO, c *gin.Context
 
 func (sc ShoppingCartService) QueryShoppingCart(shoppingCart model.ShoppingCart, c *gin.Context) ([]model.ShoppingCart, error) {
 	var CartList []model.ShoppingCart
-	if err := global.DB.Find(&CartList, shoppingCart).Error; err != nil {
+	if err := global.DBs.Find(&CartList, shoppingCart).Error; err != nil {
 		global.Log.Error(err)
 		res.FailWithMessage(code.SqlError, c)
 		return nil, err
@@ -150,7 +151,7 @@ func (sc ShoppingCartService) Clean(c *gin.Context) error {
 		return errors.New(code.UserError)
 	}
 	userId := value.(uint64)
-	if err := global.DB.Where("user_id=?", userId).Delete(&model.ShoppingCart{}).Error; err != nil {
+	if err := global.DBs.Where("user_id=?", userId).Delete(&model.ShoppingCart{}).Error; err != nil {
 		global.Log.Error(err)
 		res.FailWithMessage(code.SqlError, c)
 		return err

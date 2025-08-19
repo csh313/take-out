@@ -33,6 +33,7 @@ type Config struct {
 	AliOss     AliOss
 	Wechat     Wechat
 	Kafka      Kafka
+	MysqlConf  MysqlConf `mapstructure:"mysql_conf"`
 }
 
 type Server struct {
@@ -92,4 +93,27 @@ type Kafka struct {
 	Brokers []string `mapstructure:"brokers"`
 	Topic   string   `mapstructure:"topic"`
 	GroupId string   `mapstructure:"group_id"`
+}
+
+type SqlConfig struct {
+	Username string
+	Password string
+	Host     string
+	Port     string
+	DBName   string `mapstructure:"db_name"`
+	Config   string
+}
+
+type Strategy struct {
+	Read  string
+	Write string
+}
+type MysqlConf struct {
+	Master   SqlConfig
+	Slave    []SqlConfig
+	Strategy Strategy
+}
+
+func (s *SqlConfig) Dsn() string {
+	return s.Username + ":" + s.Password + "@tcp(" + s.Host + ":" + s.Port + ")/" + s.DBName + "?" + s.Config
 }

@@ -2,8 +2,6 @@ package adminService
 
 import (
 	"errors"
-	"github.com/fatih/structs"
-	"github.com/gin-gonic/gin"
 	"hmshop/common/code"
 	"hmshop/common/enum"
 	"hmshop/common/res"
@@ -12,6 +10,9 @@ import (
 	"hmshop/internal/model"
 	pwd "hmshop/utils"
 	"time"
+
+	"github.com/fatih/structs"
+	"github.com/gin-gonic/gin"
 )
 
 type EmployeeService struct {
@@ -19,7 +20,7 @@ type EmployeeService struct {
 
 func (EmployeeService) Login(c *gin.Context, req req.LoginDTO) string {
 	var employeeModel model.Employee
-	if err := global.DB.Where("username", req.UserName).First(&employeeModel).Error; err != nil {
+	if err := global.DBs.Where("username", req.UserName).First(&employeeModel).Error; err != nil {
 		global.Log.Warn("用户名不存在")
 	}
 	//校验密码
@@ -43,11 +44,11 @@ func (EmployeeService) Login(c *gin.Context, req req.LoginDTO) string {
 
 func (EmployeeService) Register(c *gin.Context, req req.RegisterDTO) error {
 	var employeeModel model.Employee
-	if err := global.DB.Take(&employeeModel, "username", req.UserName).Error; err == nil {
+	if err := global.DBs.Take(&employeeModel, "username", req.UserName).Error; err == nil {
 		return errors.New("用户名已存在")
 	}
 
-	err := global.DB.Create(&model.Employee{
+	err := global.DBs.Create(&model.Employee{
 		Username: req.UserName,
 		Password: pwd.HashPwd("123456"),
 		IdNumber: req.IdNumber,
@@ -62,7 +63,7 @@ func (EmployeeService) Register(c *gin.Context, req req.RegisterDTO) error {
 func (EmployeeService) UpdateEmployee(c *gin.Context, req req.RegisterDTO, model model.Employee) error {
 	uId, _ := c.Get(enum.CurrentId)
 
-	if err := global.DB.Take(&model, uId).Error; err != nil {
+	if err := global.DBs.Take(&model, uId).Error; err != nil {
 		return err
 	}
 	maps := structs.Map(req)
@@ -91,7 +92,7 @@ func (EmployeeService) UpdateEmployee(c *gin.Context, req req.RegisterDTO, model
 	// 手动设置更新时间和更新人
 	DataMap["UpdateTime"] = time.Now()
 	DataMap["UpdateUser"] = uId
-	tx := global.DB.WithContext(c) // 将 gin.Context 上下文传递给 gorm
+	tx := global.DBs.WithContext(c) // 将 gin.Context 上下文传递给 gorm
 	//fmt.Println(model, "----model")
 	err := tx.Model(&model).Updates(DataMap).Error
 	return err
@@ -99,7 +100,7 @@ func (EmployeeService) UpdateEmployee(c *gin.Context, req req.RegisterDTO, model
 
 func (EmployeeService) UpdatePassword(c *gin.Context, req req.EmployeeEditPassword, model model.Employee) error {
 	uId, _ := c.Get(enum.CurrentId)
-	if err := global.DB.Take(&model, uId).Error; err != nil {
+	if err := global.DBs.Take(&model, uId).Error; err != nil {
 		return errors.New("用户不存在")
 	}
 
@@ -108,7 +109,7 @@ func (EmployeeService) UpdatePassword(c *gin.Context, req req.EmployeeEditPasswo
 		return errors.New("原密码错误")
 	}
 
-	if err := global.DB.Model(&model).Update("password", pwd.HashPwd(req.NewPassword)).Error; err != nil {
+	if err := global.DBs.Model(&model).Update("password", pwd.HashPwd(req.NewPassword)).Error; err != nil {
 		global.Log.Error(code.EditError)
 		return err
 	}
@@ -116,10 +117,10 @@ func (EmployeeService) UpdatePassword(c *gin.Context, req req.EmployeeEditPasswo
 }
 
 func (EmployeeService) UpdateStatus(status int, id uint64, model model.Employee) error {
-	if err := global.DB.Take(&model, id).Error; err != nil {
+	if err := global.DBs.Take(&model, id).Error; err != nil {
 		return err
 	}
-	if err := global.DB.Model(&model).Update("status", status).Error; err != nil {
+	if err := global.DBs.Model(&model).Update("status", status).Error; err != nil {
 		global.Log.Error(code.EditError)
 		return err
 	}

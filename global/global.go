@@ -1,11 +1,12 @@
 package global
 
 import (
+	"hmshop/config"
+	"hmshop/logger"
+
 	"github.com/IBM/sarama"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
-	"hmshop/config"
-	"hmshop/logger"
 )
 
 var (
@@ -16,4 +17,5 @@ var (
 	KafkaConfig config.Kafka
 	Producer    sarama.SyncProducer
 	Consumer    sarama.ConsumerGroup
+	DBs         *gorm.DB
 )

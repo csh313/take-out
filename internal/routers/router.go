@@ -1,10 +1,11 @@
 package routers
 
 import (
-	"github.com/gin-gonic/gin"
 	"hmshop/internal/routers/admin"
 	"hmshop/internal/routers/user"
 	"hmshop/internal/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 func RouterInit() *gin.Engine {

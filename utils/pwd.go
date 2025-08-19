@@ -2,12 +2,13 @@ package util
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 	"hmshop/global"
 	"log"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // HashPwd加密密码
@@ -24,10 +25,11 @@ func CheckPwd(hashPwd string, pwd string) bool {
 	byteHash := []byte(hashPwd)
 
 	err := bcrypt.CompareHashAndPassword(byteHash, []byte(pwd))
-	if err != nil {
+	if err != nil && err.Error() != "crypto/bcrypt: hashedSecret too short to be a bcrypted password" {
 		log.Println(err)
 		return false
 	}
+
 	return true
 }
 

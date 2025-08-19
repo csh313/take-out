@@ -3,10 +3,6 @@ package userService
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/iWyh2/go-myUtils/utils"
-	"github.com/jinzhu/copier"
-	"gorm.io/gorm"
 	"hmshop/common/code"
 	"hmshop/common/enum"
 	"hmshop/common/res"
@@ -19,6 +15,11 @@ import (
 	"hmshop/internal/service/kafkaService"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	iUtils "github.com/iWyh2/go-myUtils/utils"
+	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
 )
 
 var admin adminService.OrderService
@@ -68,7 +69,7 @@ func (s OrderService) Submit(req req.OrderSubmitDTO, c *gin.Context) (*resp.Orde
 	//order.DeliveryTime = time.Now()
 
 	//插入订单数据
-	if err = global.DB.Create(&order).Error; err != nil {
+	if err = global.DBs.Create(&order).Error; err != nil {
 		res.FailWithMessage(code.AddError, c)
 		return nil, err
 	}
@@ -83,7 +84,7 @@ func (s OrderService) Submit(req req.OrderSubmitDTO, c *gin.Context) (*resp.Orde
 		orderDetail.OrderId = order.Id
 		orderDetailList = append(orderDetailList, orderDetail)
 	}
-	if err = global.DB.Create(&orderDetailList).Error; err != nil {
+	if err = global.DBs.Create(&orderDetailList).Error; err != nil {
 		res.FailWithMessage(code.AddError, c)
 		return nil, err
 	}
@@ -102,7 +103,7 @@ func (s OrderService) Submit(req req.OrderSubmitDTO, c *gin.Context) (*resp.Orde
 func (s OrderService) Pay(orderReq req.OrderPaymentDTO, c *gin.Context) (*resp.OrderPaymentVO, error) {
 	var order model.Order
 	//先查看订单状态，若为待付款，则可进行下一步
-	if err := global.DB.Where("number=?", orderReq.OrderNumber).Take(&order).Error; err != nil {
+	if err := global.DBs.Where("number=?", orderReq.OrderNumber).Take(&order).Error; err != nil {
 		global.Log.Error(err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			res.FailWithMessage(code.DataNotFound, c)
@@ -146,7 +147,7 @@ func (s OrderService) PaySuccess(orderId string, c *gin.Context) {
 		res.FailWithMessage(code.ServerInternalError, c)
 		return
 	}
-	if err = global.DB.Model(&model.Order{}).Where("id=?", orderid).Updates(&model.Order{UserId: int(userId),
+	if err = global.DBs.Model(&model.Order{}).Where("id=?", orderid).Updates(&model.Order{UserId: int(userId),
 		PayStatus: code.Paid, Status: code.ToBeConfirmed, CheckoutTime: time.Now()}).Error; err != nil {
 		res.FailWithMessage(code.SqlError, c)
 		return
@@ -209,7 +210,7 @@ func (s OrderService) RepeatOrder(id int, c *gin.Context) error {
 	userId := value.(uint64)
 	//根据订单id查询订单详情信息
 	var orderDetailList []model.OrderDetail
-	if err := global.DB.Where(&model.OrderDetail{OrderId: id}).Find(&orderDetailList).Error; err != nil {
+	if err := global.DBs.Where(&model.OrderDetail{OrderId: id}).Find(&orderDetailList).Error; err != nil {
 		res.FailWithMessage(code.QueryError, c)
 		return err
 	}
@@ -229,7 +230,7 @@ func (s OrderService) RepeatOrder(id int, c *gin.Context) error {
 		shoppingCart.UserId = userId
 		cartList = append(cartList, shoppingCart)
 	}
-	if err := global.DB.Create(&cartList).Error; err != nil {
+	if err := global.DBs.Create(&cartList).Error; err != nil {
 		res.FailWithMessage(code.SqlError, c)
 		return err
 	}
