@@ -31,6 +31,9 @@ RUN chown -R root:root /app /go
 #热加载
 RUN go install github.com/gravityblast/fresh@latest
 
-EXPOSE 80 
+# 5. 安装Delve调试工具
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+RUN chmod +x /app/scripts/debug.sh
+EXPOSE 80 1234
 USER root
 CMD ["bash"]

@@ -34,8 +34,10 @@ func PageList[T any](page req.PageInfo, model T) (list PageResult, err error) {
 
 	//global.DBs.Where(&model).Find(&(list.Rows))
 	query.Count(&(list.Total))
-
-	err = query.Limit(page.PageSize).Offset(offset).Preload("SetMealDishes").Find(&list.Rows).Error
+	var tempRows []T
+	err = query.Limit(page.PageSize).Offset(offset).Find(&tempRows).Error
+	list.Rows = tempRows
+	// err = query.Limit(page.PageSize).Offset(offset).Find(&list.Rows).Error
 
 	return list, err
 }

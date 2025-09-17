@@ -10,6 +10,7 @@ import (
 
 func RouterInit() *gin.Engine {
 	r := gin.Default()
+
 	adminGroup := r.Group("/admin")
 	admin.EmployeeRouter(adminGroup)
 	admin.CategoryRouter(adminGroup)

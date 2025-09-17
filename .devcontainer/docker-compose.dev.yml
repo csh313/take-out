@@ -21,8 +21,12 @@ services:
       # 添加 Kafka 环境变量（供应用程序读取）
       - KAFKA_BROKER=kafka:9092
     depends_on:
-      mysql:
+      mysql-master:
         condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+      # mysql:
+      #   condition: service_healthy
       redis:
         condition: service_healthy
       kafka:  # 依赖 Kafka 启动后再启动应用
@@ -34,25 +38,27 @@ services:
     networks:
       - takeout
 
-  mysql:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: sky_take_out
-      MYSQL_INITDB_SKIP_TZINFO: "1"  # 避免时区初始化问题
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    networks:
-      - takeout
+  # mysql:
+  #   container_name: mysql
+  #   image: mysql:8.0
+  #   ports:
+  #     - "3306:3306"
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: 123456
+  #     MYSQL_DATABASE: sky_take_out
+  #     MYSQL_INITDB_SKIP_TZINFO: "1"  # 避免时区初始化问题
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 10
+  #   networks:
+  #     - takeout
 
   redis:
+    container_name: redis
     image: redis:alpine
     ports:
       - "6379:6379"
@@ -68,6 +74,7 @@ services:
       - takeout
 
   kafka:
+    container_name: kafka
     image: bitnami/kafka:3.6
     ports:
       - "9092:9092"
@@ -90,6 +97,7 @@ services:
     networks:
       - takeout
   mysql-master:
+    container_name: mysql-master
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: 123456
@@ -100,9 +108,15 @@ services:
     volumes:
       - mysql-master-data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password --server-id=1 --log-bin=mysql-bin --binlog-do-db=sky_take_out
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - takeout
   mysql-slave:
+    container_name: mysql-slave
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: 123456
@@ -113,6 +127,11 @@ services:
     volumes:
       - mysql-slave-data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password --server-id=2 --relay-log=mysql-relay-bin --read-only=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     depends_on:
       - mysql-master
     networks:
